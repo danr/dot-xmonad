@@ -1,18 +1,12 @@
---
--- xmonad example config file.
---
--- A template showing all available configuration hooks,
--- and how to override the defaults in your own xmonad.hs conf file.
---
--- Normally, you'd only override those defaults you care about.
---
+-- XMonad configuration, danr
 
 import XMonad hiding ((|||))
+
 import System.Exit
+
 import XMonad.Layout.NoBorders
 import XMonad.Actions.DwmPromote
 import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.DynamicLog
 import XMonad.Layout.Master
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
@@ -22,15 +16,7 @@ import XMonad.Actions.Search
 import XMonad.Prompt
 
 import XMonad.Layout.Maximize
--- import XMonad.Layout.WindowSwitcherDecoration
--- import XMonad.Layout.DraggingVisualizer
-import XMonad.Layout.Decoration
--- import XMonad.Layout.DecorationAddons
---import XMonad.Layout.ButtonDecoration
-import XMonad.Layout.BorderResize
 import XMonad.Layout.MouseResizableTile
-import XMonad.Layout.Maximize
-import XMonad.Layout.Minimize
 import XMonad.Layout.Named
 import XMonad.Layout.LayoutCombinators 
 import XMonad.Util.Font
@@ -40,34 +26,11 @@ import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
 myLayout = 
-      avoidStrutsOn [] $
-        ( smartBorders 
-        $ mkToggle (FULL ?? EOT) 
-        $ mkToggle (single MIRROR) 
-        $ named "Normal"            (ResizableTall 1 (3/100) (1/2) [])
-      ||| named "Three-pane"        (mastered (3/100) (1/3) tall)
-      ||| named "Three-pane mirror" (mastered (3/100) (1/3) (Mirror tall))
-        ) 
-
-ninjaTheme =
-    Theme { activeColor         = "#1e98e0"
-          , activeBorderColor   = "#2296e3"
-          , activeTextColor     = "#ffffff"
-          , inactiveColor       = "#1485b5"
-          , inactiveBorderColor = "#0671a1"
-          , inactiveTextColor   = "#eeeeee"
-          , urgentColor         = "#dd00dd"
-          , urgentBorderColor   = "#ff00ff"
-          , urgentTextColor     = "#ffff00"
-          , fontName            = "-*-nu.se-*-*-*-*-*-*-*-*-*-*-*-*"
-          , decoWidth           = 200
-          , decoHeight          = 15
-        --  , windowTitleAddons   = [ (" (M)", AlignLeft)
-         --                         , ("[]"  , AlignRightOffset 25)
-          --                        , ("X"   , AlignRightOffset 10)
-                                 -- ]
-          }
-
+      avoidStrutsOn [] $ smartBorders $ mkToggle (FULL ?? EOT) $ mkToggle (single MIRROR) 
+        (    ResizableTall 1 (3/100) (1/2) []
+         ||| mastered (3/100) (1/3) tall
+         ||| mastered (3/100) (1/3) (Mirror tall))
+         
 tall = Tall 1 (3/100) (1/2)
 
 myTerminal =  "urxvt -fn \"xft:terminus-8\" +sb"
