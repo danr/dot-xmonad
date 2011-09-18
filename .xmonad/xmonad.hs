@@ -3,6 +3,10 @@
 -- Based on skangas' config on github,
 -- and on And1's on xmonad wiki
 
+-- TODO: 
+--   * bind volume and media buttons
+--   * add wiki, hoogle, google searches    
+
 import XMonad hiding ((|||))
 
 import System.Exit
@@ -79,10 +83,10 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_e, spawn "emacs")
     
       -- Search engines
-    , (shiftSuper xK_t, promptSearch defaultXPConfig tyda)
---    , (shiftSuper xK_h, promptSearch defaultXPConfig hoogle)
---    , (shiftSuper xK_g, promptSearch defaultXPConfig google)
---    , (shiftSuper xK_w, promptSearch defaultXPConfig wiki)
+    , (shiftSuper xK_y, promptSearch defaultXPConfig tyda)
+--  , (shiftSuper xK_h, promptSearch defaultXPConfig hoogle)
+--  , (shiftSuper xK_g, promptSearch defaultXPConfig google)
+--  , (shiftSuper xK_w, promptSearch defaultXPConfig wiki)
       
       -- Information on osd
     , (super xK_d, spawn osdDate)
@@ -159,8 +163,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
 -}
 
 ------------------------------------------------------------------------
--- Mouse bindings: default actions bound to mouse events
---
+-- Mouse bindings: default actions bound to mouse myMouseBindings
 myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList $
 
     -- mod-button1, Set the window to floating mode and move by dragging
@@ -185,6 +188,8 @@ myManageHook = composeAll
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
     , resource  =? "kicker"         --> doIgnore ]
+
+
 
 
 ------------------------------------------------------------------------
