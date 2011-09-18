@@ -82,6 +82,9 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_d, spawn osdDate)
     , (super xK_k, spawn osdTime)
     , (super xK_a, spawn osdAcpi)
+      
+      -- Take screenshot
+    , (super xK_Print, spawn "scrot screen_%Y-%m-%d.png -d 1")
     
       -- Spawn dmenu
     , (super xK_l, spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
@@ -96,8 +99,8 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (shiftSuper xK_space, setLayout $ XMonad.layoutHook conf)
     
       -- Shrink and expand the windows on the non-master area
-    , (super xK_v, sequence_ (take 2 $ cycle [sendMessage MirrorShrink,sendMessage ShrinkSlave]))
-    , (super xK_w, sequence_ (take 2 $ cycle [sendMessage MirrorExpand,sendMessage ExpandSlave]))
+    , (super xK_v, sequence_ (take 6 $ cycle [sendMessage MirrorShrink,sendMessage ShrinkSlave]))
+    , (super xK_w, sequence_ (take 6 $ cycle [sendMessage MirrorExpand,sendMessage ExpandSlave]))
 
       -- Move focus 
     , (super xK_Tab , windows W.focusDown)
