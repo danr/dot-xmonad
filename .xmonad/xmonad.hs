@@ -47,20 +47,41 @@ myFocusedBorderColor  = "#1892f8"
 
 tyda = searchEngine "tyda" "http://tyda.se/search?form=1&w_lang=&x=0&y=0&w="
 
+osdColor = "#a10a30"
+osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
+
+
+
+osdPipe = "| osd_cat -d 2 -p bottom -A center -c '" ++ osdColor ++ "'" 
+          ++ " -f '" ++ osdFont ++ "'"
+
+dateFormat = "%Y-%m-%d %H:%M"
+timeFormat = "%H:%M"
+
+osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe
+osdTime = "date +'" ++ timeFormat ++ "'" ++ osdPipe
+osdAcpi = "acpi | perl -e \"while (<>) { s/,/\n/ ; print }\"" ++ osdPipe
+
 myKeys conf@(XConfig {XMonad.modMask = modMask}) = 
   
   let super      = (,) modMask
       shiftSuper = (,) (modMask .|. shiftMask)
+      
   in M.fromList $
 
       -- Spawn programs
-    [ (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
-    , (super xK_u, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
+    [ (super xK_c, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+    , (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
     , (super xK_f, spawn "firefox")
     , (super xK_e, spawn "emacs")
     
       -- Search engines
     , (shiftSuper xK_w, promptSearch defaultXPConfig tyda)
+      
+      -- Information on osd
+    , (super xK_d, spawn osdDate)
+    , (super xK_k, spawn osdTime)
+    , (super xK_a, spawn osdAcpi)
     
       -- Spawn dmenu
     , (super xK_l, spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
@@ -75,8 +96,8 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (shiftSuper xK_space, setLayout $ XMonad.layoutHook conf)
     
       -- Shrink and expand the windows on the non-master area
-    , (super xK_v, sequence_ [sendMessage MirrorShrink,sendMessage ShrinkSlave])
-    , (super xK_w, sequence_ [sendMessage MirrorExpand,sendMessage ExpandSlave])
+    , (super xK_v, sequence_ (take 2 $ cycle [sendMessage MirrorShrink,sendMessage ShrinkSlave]))
+    , (super xK_w, sequence_ (take 2 $ cycle [sendMessage MirrorExpand,sendMessage ExpandSlave]))
 
       -- Move focus 
     , (super xK_Tab , windows W.focusDown)
@@ -109,31 +130,24 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (shiftSuper xK_q, io (exitWith ExitSuccess))
 
     -- Restart xmonad
-    , (super xK_q     , restart "xmonad" True	)	
-
-	
+    , (super xK_q     , restart "xmonad" True	)		
     ]
+    
     ++
-
-    --
+    
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
-    --
     [((m .|. modMask, k), windows $ f i)
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
 
-    ++
-
+{-    ++
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
-    -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
-    
+    -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3    
     [((m .|. modMask, key), screenWorkspace sc >>= flip whenJust (windows . f))
         | (key, sc) <- zip [xK_k, xK_j, xK_x] [0..]
         , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
-
-
-
+-}
 
 ------------------------------------------------------------------------
 -- Mouse bindings: default actions bound to mouse events
