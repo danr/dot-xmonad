@@ -47,105 +47,70 @@ myFocusedBorderColor  = "#1892f8"
 
 tyda = searchEngine "tyda" "http://tyda.se/search?form=1&w_lang=&x=0&y=0&w="
 
-myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
+myKeys conf@(XConfig {XMonad.modMask = modMask}) = 
+  
+  let super      = (,) modMask
+      shiftSuper = (,) (modMask .|. shiftMask)
+  in M.fromList $
 
-    -- launch a terminal
-    [ ((modMask ,		 xK_r	), spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+      -- Spawn programs
+    [ (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+    , (super xK_u, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
+    , (super xK_f, spawn "firefox")
+    , (super xK_e, spawn "emacs")
+    
+      -- Search engines
+    , (shiftSuper xK_w, promptSearch defaultXPConfig tyda)
+    
+      -- Spawn dmenu
+    , (super xK_l, spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
+    
+      -- Kill window
+    , (shiftSuper xK_d, kill)
+    
+      -- Rotate through the available layout algorithms
+    , (super xK_space, sendMessage NextLayout)
+    
+      --  Reset the layouts on the current workspace to default
+    , (shiftSuper xK_space, setLayout $ XMonad.layoutHook conf)
+    
+      -- Shrink and expand the windows on the non-master area
+    , (super xK_v, sequence_ [sendMessage MirrorShrink,sendMessage ShrinkSlave])
+    , (super xK_w, sequence_ [sendMessage MirrorExpand,sendMessage ExpandSlave])
 
-    , ((modMask ,		 xK_c	), spawn "urxvt -fn \"xft:clean\" +sb")
+      -- Move focus 
+    , (super xK_Tab , windows W.focusDown)
+    , (super xK_n   , windows W.focusDown)
+    , (super xK_t   , windows W.focusUp  )
 
-    , ((modMask ,		 xK_g	), spawn "urxvt -fn \"xft:Terminus-12\" +sb")
+      -- Swap the focused window and the master window, and focus master (dwmpromote)
+    , (super xK_Return, dwmpromote )
 
-    , ((modMask ,		 xK_e	), spawn "urxvt -fn \"xft:Bitstream Vera Sans Mono-12\" +sb")
+      -- Swap the windows
+    , (shiftSuper xK_n, windows W.swapDown  )
+    , (shiftSuper xK_t, windows W.swapUp    )
 
-    , ((modMask ,		 xK_u	), spawn "urxvt +sb")
-    , ((modMask .|. shiftMask , xK_u	), spawn "urxvt +sb -rv")
-
-    , ((modMask ,		 xK_i	), spawn "urxvt -fn \"xft:Inconsolata-12\" +sb")
-
-    , ((modMask ,		 xK_f	), spawn "firefox")
-
-    , ((modMask .|. shiftMask, xK_w	), promptSearch defaultXPConfig tyda)
-
-    -- launch dmenu
-    , ((modMask,         xK_l     ), spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
-
-	-- mpd bindings
-    {-
-    , ((modMask			, xK_p     ), spawn "mpc toggle" ) 
-    , ((modMask			, xK_o     ), spawn "mpc next" )
-    , ((modMask			, xK_a     ), spawn "mpc prev" )
-
--}
-    -- change keymap
-    , ((modMask ,		 xK_F1	), spawn "setxkbmap dvorak; xmodmap xmodmapaao;")
-    , ((modMask ,        xK_F2  ), spawn "setxkbmap se; xmodmap xmodmap-swapcapsesc")
-    , ((modMask ,		 xK_F4	), spawn "xmodmap xmodmap-swapcapsesc")
-
-    -- close focused window 
-    , ((modMask .|. shiftMask, xK_d     ), kill)
-
-     -- Rotate through the available layout algorithms
-    , ((modMask,               xK_space ), sendMessage NextLayout)
-
-    --  Reset the layouts on the current workspace to default
-    , ((modMask .|. shiftMask, xK_space ), setLayout $ XMonad.layoutHook conf)
-
-    -- Resize viewed windows to the correct size
-    --, ((modMask,               xK_n     ), refresh)
-
-    -- Shrink and expand the windows on the non-master area
-	, ((modMask, xK_v), sequence_ [sendMessage MirrorShrink,sendMessage ShrinkSlave])
-	, ((modMask, xK_w), sequence_ [sendMessage MirrorExpand,sendMessage ExpandSlave])
-
-    -- Move focus to the next window
-    , ((modMask,               xK_Tab   ), windows W.focusDown)
-
-	-- Move focus to the next window
-    , ((modMask,               xK_n     ), windows W.focusDown)
-
-    -- Move focus to the previous window
-    , ((modMask,               xK_t     ), windows W.focusUp  )
-
-    -- Swap the focused window and the master window
-    , ((modMask,               xK_Return), dwmpromote )
-
-    -- Swap the focused window with the next window
-    , ((modMask .|. shiftMask, xK_n     ), windows W.swapDown  )
-
-    -- Swap the focused window with the previous window
-    , ((modMask .|. shiftMask, xK_t     ), windows W.swapUp    )
-
-    -- Shrink the master area
-    , ((modMask,               xK_h     ), sendMessage Shrink)
-
-    -- Expand the master area
-    , ((modMask,               xK_s     ), sendMessage Expand)
-
-     -- Toggle upper gap
-    -- , ((modMask,               xK_g     ), sendMessage $ ToggleStrut U)
-
-	-- Toggle full
-    , ((modMask,               xK_z   ), sendMessage $ Toggle FULL )
-
-	-- Toggle mirror
-    , ((modMask,               xK_m   ), sendMessage $ Toggle MIRROR )
+      -- Resize the master area
+    , (super xK_h, sendMessage Shrink)
+    , (super xK_s, sendMessage Expand)
+    
+	-- Toggle zoom (full) and mirror
+    , (super xK_z, sendMessage $ Toggle FULL )
+    , (super xK_m, sendMessage $ Toggle MIRROR )
 
     -- Push window back into tiling
-    , ((modMask,               xK_b     ), withFocused $ windows . W.sink)
+    , (super xK_b, withFocused $ windows . W.sink)
 
-    -- Increment the number of windows in the master area
-    , ((modMask              , xK_comma ), sendMessage (IncMasterN 1))
-
-    -- Deincrement the number of windows in the master area
-    , ((modMask              , xK_period), sendMessage (IncMasterN (-1)))
+    -- [De]Increment the number of windows in the master area
+    , (super xK_comma , sendMessage (IncMasterN 1))
+    , (super xK_period, sendMessage (IncMasterN (-1)))
 
     -- Quit xmonad
-    , ((modMask .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
+    , (shiftSuper xK_q, io (exitWith ExitSuccess))
 
     -- Restart xmonad
-    , ((modMask              , xK_q     ), restart "xmonad" True	)	
-          --	broadcastMessage ReleaseResources >> restart (Just (Maybe "xmonad")) True)
+    , (super xK_q     , restart "xmonad" True	)	
+
 	
     ]
     ++
@@ -160,7 +125,6 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList $
 
     ++
 
-    
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
     
