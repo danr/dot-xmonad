@@ -22,8 +22,8 @@ import XMonad.Layout.Maximize
 import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.Named
 import XMonad.Layout.LayoutCombinators 
-import XMonad.Util.Font
 
+import XMonad.Hooks.ManageHelpers
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -178,69 +178,34 @@ myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList $
 
 ------------------------------------------------------------------------
 -- Window rules:
-
--- Execute arbitrary actions and WindowSet manipulations when managing
--- a new window. You can use this to, for example, always float a
--- particular program, or have a client always appear on a particular
--- workspace.
---
--- To find the property name associated with a program, use
--- > xprop | grep WM_CLASS
--- and click on the client you're interested in.
---
--- To match on the WM_NAME, you can use 'title' in the same way that
--- 'className' and 'resource' are used below.
---
 myManageHook = composeAll
-    [ className =? "MPlayer"        --> doFloat
+    [ isFullscreen                  --> doFullFloat 
+    , className =? "MPlayer"        --> doFloat
     , className =? "Gimp"           --> doFloat
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
-    , resource  =? "kicker"       --> doIgnore ]
+    , resource  =? "kicker"         --> doIgnore ]
 
 
 ------------------------------------------------------------------------
--- Status bars and logging
+-- Run xmonad
+main = xmonad defaults 
 
--- Perform an arbitrary action on each internal state change or X event.
--- See the 'DynamicLog' extension for examples.
---
--- To emulate dwm's status bar
---
--- > logHook = dynamicLogDzen
---
--- myLogHook = dynamicLogXmobar
-
-------------------------------------------------------------------------
--- Now run xmonad with all the defaults we set up.
-
--- Run xmonad with the settings you specify. No need to modify this.
---
-main = xmonad defaults --  xmobar $ \conf -> xmonad $ defaults
-
--- A structure containing your configuration settings, overriding
--- fields in the default config. Any you don't override, will 
--- use the defaults defined in xmonad/XMonad/Config.hs
--- 
--- No need to modify this.
---
 defaults = defaultConfig {
-      -- simple stuff
-        terminal           = myTerminal,
-        borderWidth        = myBorderWidth,
-        modMask            = myModMask,
-        numlockMask        = myNumlockMask,
-        workspaces         = myWorkspaces,
-      	normalBorderColor  = myNormalBorderColor,
-      	focusedBorderColor = myFocusedBorderColor,
 
-      -- key bindings
-        keys               = myKeys,
-        mouseBindings      = myMouseBindings,
+  terminal           = myTerminal,
+  borderWidth        = myBorderWidth,
+  modMask            = myModMask,
+  numlockMask        = myNumlockMask,
+  workspaces         = myWorkspaces,
+  normalBorderColor  = myNormalBorderColor,
+  focusedBorderColor = myFocusedBorderColor,
 
-      -- hooks, layouts
-        layoutHook         = myLayout,
-        manageHook         = myManageHook
-        -- logHook            = myLogHook
-    }
+  keys               = myKeys,
+  mouseBindings      = myMouseBindings,
+
+  layoutHook         = myLayout,
+  manageHook         = myManageHook
+                       
+  }
 
