@@ -1,5 +1,8 @@
 -- XMonad configuration, danr
 
+-- Based on skangas' config on github,
+-- and on And1's on xmonad wiki
+
 import XMonad hiding ((|||))
 
 import System.Exit
@@ -42,7 +45,7 @@ myNumlockMask   = mod2Mask
 
 myWorkspaces    = map show [1..9] 
 
-myNormalBorderColor = "#105577"
+myNormalBorderColor = "#102233"
 myFocusedBorderColor  = "#1892f8"
 
 tyda = searchEngine "tyda" "http://tyda.se/search?form=1&w_lang=&x=0&y=0&w="
@@ -55,7 +58,7 @@ osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
 osdPipe = "| osd_cat -d 2 -p bottom -A center -c '" ++ osdColor ++ "'" 
           ++ " -f '" ++ osdFont ++ "'"
 
-dateFormat = "%Y-%m-%d %H:%M"
+dateFormat = "%Y-%m-%d\n%H:%M"
 timeFormat = "%H:%M"
 
 osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe
@@ -76,7 +79,10 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_e, spawn "emacs")
     
       -- Search engines
-    , (shiftSuper xK_w, promptSearch defaultXPConfig tyda)
+    , (shiftSuper xK_t, promptSearch defaultXPConfig tyda)
+--    , (shiftSuper xK_h, promptSearch defaultXPConfig hoogle)
+--    , (shiftSuper xK_g, promptSearch defaultXPConfig google)
+--    , (shiftSuper xK_w, promptSearch defaultXPConfig wiki)
       
       -- Information on osd
     , (super xK_d, spawn osdDate)
@@ -87,7 +93,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_Print, spawn "scrot screen_%Y-%m-%d.png -d 1")
     
       -- Spawn dmenu
-    , (super xK_l, spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
+    , (super xK_l, spawn "dmenu_run")
     
       -- Kill window
     , (shiftSuper xK_d, kill)
@@ -140,16 +146,16 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
-    [((m .|. modMask, k), windows $ f i)
-        | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
+    [ ((m .|. modMask, k), windows $ f i)
+    | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
+    , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
 
 {-    ++
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3    
-    [((m .|. modMask, key), screenWorkspace sc >>= flip whenJust (windows . f))
-        | (key, sc) <- zip [xK_k, xK_j, xK_x] [0..]
-        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
+    [ ((m .|. modMask, key), screenWorkspace sc >>= flip whenJust (windows . f))
+    | (key, sc) <- zip [xK_k, xK_j, xK_x] [0..]
+    , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 -}
 
 ------------------------------------------------------------------------
