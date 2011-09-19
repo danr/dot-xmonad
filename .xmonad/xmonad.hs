@@ -77,8 +77,8 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
   in M.fromList $
 
       -- Spawn programs
-    [ (super xK_c, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
-    , (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
+    [ (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+    , (super xK_c, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
     , (super xK_f, spawn "firefox")
     , (super xK_e, spawn "emacs")
     
@@ -187,10 +187,8 @@ myManageHook = composeAll
     , className =? "Gimp"           --> doFloat
     , resource  =? "desktop_window" --> doIgnore
     , resource  =? "kdesktop"       --> doIgnore 
-    , resource  =? "kicker"         --> doIgnore ]
-
-
-
+    , resource  =? "kicker"         --> doIgnore 
+    ]
 
 ------------------------------------------------------------------------
 -- Run xmonad
@@ -198,19 +196,19 @@ main = xmonad defaults
 
 defaults = defaultConfig {
 
-  terminal           = myTerminal,
-  borderWidth        = myBorderWidth,
-  modMask            = myModMask,
-  numlockMask        = myNumlockMask,
-  workspaces         = myWorkspaces,
-  normalBorderColor  = myNormalBorderColor,
-  focusedBorderColor = myFocusedBorderColor,
-
-  keys               = myKeys,
-  mouseBindings      = myMouseBindings,
-
-  layoutHook         = myLayout,
-  manageHook         = myManageHook
+    terminal           = myTerminal,
+    borderWidth        = myBorderWidth,
+    modMask            = myModMask,
+    numlockMask        = myNumlockMask,
+    workspaces         = myWorkspaces,
+    normalBorderColor  = myNormalBorderColor,
+    focusedBorderColor = myFocusedBorderColor,
+    
+    keys               = myKeys,
+    mouseBindings      = myMouseBindings,
+    
+    layoutHook         = myLayout,
+    manageHook         = myManageHook
                        
   }
 
