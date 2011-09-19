@@ -58,6 +58,9 @@ osdColor = "#a10a30"
 osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
 
 
+dmenu = "dmenu_run -fn \"-*-terminus-*-*-*-*-*-*-*-*-*-*-*-*\"" 
+     ++ " -nb \"#000\" -nf \"#ccc\" -sb \"#333\" -sf \"#66e\" -l 6 -b"
+
 
 osdPipe = "| osd_cat -d 2 -p bottom -A center -c '" ++ osdColor ++ "'" 
           ++ " -f '" ++ osdFont ++ "'"
@@ -97,7 +100,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_Print, spawn "scrot screen_%Y-%m-%d.png -d 1")
     
       -- Spawn dmenu
-    , (super xK_l, spawn "dmenu_run")
+    , (super xK_l, spawn dmenu)
     
       -- Kill window
     , (shiftSuper xK_d, kill)
