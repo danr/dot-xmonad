@@ -55,22 +55,27 @@ myFocusedBorderColor  = "#1892f8"
 
 tyda = searchEngine "tyda" "http://tyda.se/search?form=1&w_lang=&x=0&y=0&w="
 
-osdColor = "#a10a30"
-osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
-
-
 dmenu = "dmenu_run -fn \"-*-terminus-*-*-*-*-*-*-*-*-*-*-*-*\"" 
      ++ " -nb \"#000\" -nf \"#ccc\" -sb \"#333\" -sf \"#66e\" -l 6 -b"
 
-osdPipe = "| osd_cat -d 2 -p bottom -A center -c '" ++ osdColor ++ "'" 
-          ++ " -f '" ++ osdFont ++ "'"
+osdColor = "#6060e0"
+osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
+
+osd = "osd_cat -d 2 -p middle -A center -c '" ++ osdColor ++ "'" 
+      ++ " -f '" ++ osdFont ++ "'" ++ " -O 2"
+      
+osdPipe = "|" ++ osd
+
+osdText t = "echo " ++ show t ++ osdPipe
 
 dateFormat = "%Y-%m-%d\n%H:%M"
 timeFormat = "%H:%M"
 
 osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe
 osdTime = "date +'" ++ timeFormat ++ "'" ++ osdPipe
-osdAcpi = "acpi | perl -e \"while (<>) { s/,/\n/ ; print }\"" ++ osdPipe
+osdAcpi = "acpi | perl -e \"@_ = split('charging,',<>); print qq/@_[1]/;\"" ++ osdPipe
+
+osdspawn s = spawn s >> spawn (osdText (takeWhile (/= ' ') s)) 
 
 myKeys conf@(XConfig {XMonad.modMask = modMask}) = 
   
@@ -80,10 +85,10 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
   in M.fromList $
 
       -- Spawn programs
-    [ (super xK_r, spawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
-    , (super xK_c, spawn "urxvt -fn \"xft:Terminus-8\" +sb")
-    , (super xK_f, spawn "firefox")
-    , (super xK_e, spawn "emacs")
+    [ (super xK_r, osdspawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+    , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
+    , (super xK_c, osdspawn "conkeror")
+    , (super xK_e, osdspawn "emacs")
     
       -- Search engines
     , (shiftSuper xK_y, promptSearch defaultXPConfig tyda)
@@ -93,13 +98,13 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
       
       -- Information on osd
     , (super xK_d, spawn osdDate)
-    , (super xK_k, spawn osdTime)
+    , (super xK_t, spawn osdTime)
     , (super xK_a, spawn osdAcpi)
       
       -- Take screenshot
-    , (super xK_Print, spawn "scrot screen_%Y-%m-%d.png -d 1")
+    , (super xK_Print, osdspawn "scrot screen_%Y-%m-%d.png")
     
-      -- Spawn dmenu
+      -- Osdspawn dmenu
     , (super xK_l, spawn dmenu)
     
       -- Kill window
@@ -136,7 +141,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_m, sendMessage $ Toggle MIRROR )
 
     -- Push window back into tiling
-    , (super xK_t, withFocused $ windows . W.sink)
+    , (shiftSuper xK_t, withFocused $ windows . W.sink)
 
     -- [De]Increment the number of windows in the master area
     , (super xK_comma , sendMessage (IncMasterN 1))
