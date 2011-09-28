@@ -1,12 +1,9 @@
+{-# LANGUAGE ViewPatterns #-}
 
 -- XMonad configuration, danr
 
 -- Based on skangas' config on github,
 -- and on And1's on xmonad wiki
-
--- TODO: 
---   * bind volume and media buttons
---   * add wiki, hoogle, google searches    
 
 import XMonad hiding ((|||))
 
@@ -30,12 +27,15 @@ import XMonad.Layout.LayoutCombinators
 
 import XMonad.Hooks.ManageHelpers
 
+import Graphics.X11.ExtraTypes.XF86
+
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
 import Data.Char
 import Data.List
 import Data.List.Split
+import Data.Maybe
 
 myLayout = 
       avoidStrutsOn [] $ smartBorders $ mkToggle (FULL ?? EOT) $ mkToggle (single MIRROR) 
@@ -74,26 +74,33 @@ osdText t time = "echo \"" ++ t ++ "\"" ++ osdPipe time
 dateFormat = "%Y-%m-%d\n%H:%M"
 timeFormat = "%H:%M"
 
-osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe 2
-osdTime = "date +'" ++ timeFormat ++ "'" ++ osdPipe 2
-osdAcpi = "acpi | perl -e \"@_ = split('harging, ',<>); print qq/@_[1]/;\"" ++ osdPipe 2
+killosd = "killall osd_cat; "
+
+osdDate = killosd ++ "date +'" ++ dateFormat ++ "'" ++ osdPipe 2
+osdTime = killosd ++ "date +'" ++ timeFormat ++ "'" ++ osdPipe 2
+osdAcpi = killosd ++ "acpi | perl -e \"@_ = split(', ',<>); print qq/@_[2]@_[1]/;\"" ++ osdPipe 2
 
 osdspawn s = spawn s >> spawn (osdText (takeWhile (/= ' ') s) 1) 
 
 myKeys conf@(XConfig {XMonad.modMask = modMask}) =
 
-  let super      = (,) modMask
+  let just       = (,) 0
+      shift      = (,) shiftMask
+      super      = (,) modMask
       shiftSuper = (,) (modMask .|. shiftMask)
       
       osdUnbound = do
           let bs = map fst (M.toList (myKeys conf))
               alphabet = ['a'..'z'] ++ ['A'..'Z'] -- ++ "',.[];"
+              interpretKey (m,chr . fromEnum -> k)
+                | fromEnum m == fromEnum modMask                  = Just k
+                | fromEnum m == fromEnum (modMask .|. shiftMask)  = Just (toUpper k)
+                | otherwise                                       = Nothing
               keys :: [Char]
-              keys = map (\(m,k) -> (if fromEnum m > 64 then toUpper else id) 
-                                    (chr (fromEnum k))) 
-                         bs
+              keys = mapMaybe interpretKey bs
               unused = sort (alphabet \\ keys)
-              output = unlines ("unbound: ":(map (intersperse ' ') (chunk 10 unused)))
+              output = unlines ("unbound: ":map (intersperse ' ') (chunk 10 unused))
+          liftIO $ writeFile "/home/dan/unbound" keys
           spawn (osdText output 6)
       
   in M.fromList $
@@ -115,8 +122,8 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
       -- Take screenshot
     , (super xK_Print, osdspawn "scrot screen_%Y-%m-%d.png")
     
-      -- Osdspawn dmenu
-    , (super xK_l, spawn dmenu)
+      -- Dmenu
+    , (super xK_g, spawn dmenu)
     
       -- Kill window
     , (shiftSuper xK_d, kill)
@@ -162,15 +169,35 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (shiftSuper xK_q, io (exitWith ExitSuccess))
 
       -- Restart xmonad
-    , (super xK_q     , restart "xmonad" True	)		
+    , (super xK_q,       restart "xmonad" True)		
       
       -- CycleWS
-    , (super xK_o     , moveTo Prev NonEmptyWS)
-    , (super xK_u     , moveTo Next NonEmptyWS)
+    , (super xK_o,      moveTo Prev NonEmptyWS)
+    , (super xK_u,      moveTo Next NonEmptyWS)
     , (shiftSuper xK_o, shiftToPrev >> prevWS)
     , (shiftSuper xK_u, shiftToNext >> nextWS)
-    , (super xK_s     , toggleWS)
-    , (super xK_i     , moveTo Next EmptyWS)
+    , (super xK_s,      toggleWS)
+    , (super xK_i,      moveTo Next EmptyWS)
+      
+    ] 
+    
+    ++
+    
+    let mute = spawn (killosd ++ "amixer sset Master toggle | grep -w 'on\\|off' -o | head -n 1 | perl -e \"print 'Master: '; print <>;\" " ++ osdPipe 1)
+        volume s = spawn (killosd ++ "amixer set Master " ++ s ++ " | grep '[0-9]*%' -o | head -n 1 " ++ osdPipe 1) in     
+    
+    [ -- Media keys : alsamixer
+      (just xF86XK_AudioMute,         mute)
+    , (just xF86XK_AudioRaiseVolume,  volume "10%+")
+    , (just xF86XK_AudioLowerVolume,  volume "10%-")
+    , (shift xF86XK_AudioRaiseVolume, volume "2%+")
+    , (shift xF86XK_AudioLowerVolume, volume "2%-")
+      
+      -- Media keys : mpd
+    , (just xF86XK_AudioPlay,        spawn "mpc toggle")
+    , (just xF86XK_AudioStop,        spawn "mpc stop")
+    , (just xF86XK_AudioPrev,        spawn "mpc prev")
+    , (just xF86XK_AudioNext,        spawn "mpc next")
       
     ]
     
