@@ -12,9 +12,12 @@ import XMonad hiding ((|||))
 
 import System.Exit
 
-import XMonad.Layout.NoBorders
 import XMonad.Actions.DwmPromote
+import XMonad.Actions.CycleWS
+
 import XMonad.Hooks.ManageDocks
+
+import XMonad.Layout.NoBorders
 import XMonad.Layout.Master
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
@@ -148,18 +151,27 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_z, sendMessage $ Toggle FULL )
     , (super xK_m, sendMessage $ Toggle MIRROR )
 
-    -- Push window back into tiling
+      -- Push window back into tiling
     , (shiftSuper xK_t, withFocused $ windows . W.sink)
 
-    -- [De]Increment the number of windows in the master area
+      -- [De]Increment the number of windows in the master area
     , (super xK_comma , sendMessage (IncMasterN 1))
     , (super xK_period, sendMessage (IncMasterN (-1)))
 
-    -- Quit xmonad
+      -- Quit xmonad
     , (shiftSuper xK_q, io (exitWith ExitSuccess))
 
-    -- Restart xmonad
+      -- Restart xmonad
     , (super xK_q     , restart "xmonad" True	)		
+      
+      -- CycleWS
+    , (super xK_o     , moveTo Prev NonEmptyWS)
+    , (super xK_u     , moveTo Next NonEmptyWS)
+    , (shiftSuper xK_o, shiftToPrev >> prevWS)
+    , (shiftSuper xK_u, shiftToNext >> nextWS)
+    , (super xK_s     , toggleWS)
+    , (super xK_i     , moveTo Next EmptyWS)
+      
     ]
     
     ++
