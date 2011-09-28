@@ -20,9 +20,6 @@ import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.ResizableTile
 
-import XMonad.Actions.Search
-import XMonad.Prompt
-
 import XMonad.Layout.Maximize
 import XMonad.Layout.MouseResizableTile
 import XMonad.Layout.Named
@@ -53,32 +50,31 @@ myWorkspaces    = map show [1..9]
 myNormalBorderColor = "#102233"
 myFocusedBorderColor  = "#1892f8"
 
-tyda = searchEngine "tyda" "http://tyda.se/search?form=1&w_lang=&x=0&y=0&w="
-
 dmenu = "dmenu_run -fn \"-*-terminus-*-*-*-*-*-*-*-*-*-*-*-*\"" 
      ++ " -nb \"#000\" -nf \"#ccc\" -sb \"#333\" -sf \"#66e\" -l 6 -b"
 
 osdColor = "#6060e0"
 osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
 
-osd = "osd_cat -d 2 -p middle -A center -c '" ++ osdColor ++ "'" 
+osd time = "osd_cat -d " ++ show time ++ " -p middle -A center -c '" ++ osdColor ++ "'" 
       ++ " -f '" ++ osdFont ++ "'" ++ " -O 2"
       
-osdPipe = "|" ++ osd
+osdPipe time = "|" ++ osd time
 
-osdText t = "echo " ++ show t ++ osdPipe
+osdText :: String -> Int -> String
+osdText t time = "echo \"" ++ t ++ "\"" ++ osdPipe time
 
 dateFormat = "%Y-%m-%d\n%H:%M"
 timeFormat = "%H:%M"
 
-osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe
-osdTime = "date +'" ++ timeFormat ++ "'" ++ osdPipe
-osdAcpi = "acpi | perl -e \"@_ = split('charging,',<>); print qq/@_[1]/;\"" ++ osdPipe
+osdDate = "date +'" ++ dateFormat ++ "'" ++ osdPipe 2
+osdTime = "date +'" ++ timeFormat ++ "'" ++ osdPipe 2
+osdAcpi = "acpi | perl -e \"@_ = split('harging, ',<>); print qq/@_[1]/;\"" ++ osdPipe 2
 
-osdspawn s = spawn s >> spawn (osdText (takeWhile (/= ' ') s)) 
+osdspawn s = spawn s >> spawn (osdText (takeWhile (/= ' ') s) 1) 
 
-myKeys conf@(XConfig {XMonad.modMask = modMask}) = 
-  
+myKeys conf@(XConfig {XMonad.modMask = modMask}) =
+
   let super      = (,) modMask
       shiftSuper = (,) (modMask .|. shiftMask)
       
@@ -89,12 +85,6 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
     , (super xK_c, osdspawn "conkeror")
     , (super xK_e, osdspawn "emacs")
-    
-      -- Search engines
-    , (shiftSuper xK_y, promptSearch defaultXPConfig tyda)
---  , (shiftSuper xK_h, promptSearch defaultXPConfig hoogle)
---  , (shiftSuper xK_g, promptSearch defaultXPConfig google)
---  , (shiftSuper xK_w, promptSearch defaultXPConfig wiki)
       
       -- Information on osd
     , (super xK_d, spawn osdDate)
