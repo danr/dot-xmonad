@@ -1,3 +1,4 @@
+
 -- XMonad configuration, danr
 
 -- Based on skangas' config on github,
@@ -61,7 +62,6 @@ osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
 dmenu = "dmenu_run -fn \"-*-terminus-*-*-*-*-*-*-*-*-*-*-*-*\"" 
      ++ " -nb \"#000\" -nf \"#ccc\" -sb \"#333\" -sf \"#66e\" -l 6 -b"
 
-
 osdPipe = "| osd_cat -d 2 -p bottom -A center -c '" ++ osdColor ++ "'" 
           ++ " -f '" ++ osdFont ++ "'"
 
@@ -118,25 +118,25 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
       -- Move focus 
     , (super xK_Tab , windows W.focusDown)
     , (super xK_n   , windows W.focusDown)
-    , (super xK_t   , windows W.focusUp  )
+    , (super xK_p   , windows W.focusUp  )
 
       -- Swap the focused window and the master window, and focus master (dwmpromote)
     , (super xK_Return, dwmpromote )
 
       -- Swap the windows
     , (shiftSuper xK_n, windows W.swapDown  )
-    , (shiftSuper xK_t, windows W.swapUp    )
+    , (shiftSuper xK_p, windows W.swapUp    )
 
       -- Resize the master area
-    , (super xK_h, sendMessage Shrink)
-    , (super xK_s, sendMessage Expand)
+    , (super xK_b, sendMessage Shrink)
+    , (super xK_f, sendMessage Expand)
     
 	-- Toggle zoom (full) and mirror
     , (super xK_z, sendMessage $ Toggle FULL )
     , (super xK_m, sendMessage $ Toggle MIRROR )
 
     -- Push window back into tiling
-    , (super xK_b, withFocused $ windows . W.sink)
+    , (super xK_t, withFocused $ windows . W.sink)
 
     -- [De]Increment the number of windows in the master area
     , (super xK_comma , sendMessage (IncMasterN 1))
