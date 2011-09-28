@@ -30,6 +30,10 @@ import XMonad.Hooks.ManageHelpers
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import Data.Char
+import Data.List
+import Data.List.Split
+
 myLayout = 
       avoidStrutsOn [] $ smartBorders $ mkToggle (FULL ?? EOT) $ mkToggle (single MIRROR) 
         (    ResizableTall 1 (3/100) (1/2) []
@@ -86,6 +90,20 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
     , (super xK_c, osdspawn "conkeror")
     , (super xK_e, osdspawn "emacs")
       
+      -- List the unbound keys
+    , (shiftSuper xK_b, do 
+          let bs = map fst (M.toList (myKeys conf))
+              alphabet = ['a'..'z'] ++ ['A'..'Z'] -- ++ "',.[];"
+              keys :: [Char]
+              keys = map (\(m,k) -> (if fromEnum m > 64 then toUpper else id) 
+                                    (chr (fromEnum k))) 
+                         bs
+              unused = sort (alphabet \\ keys)
+              output = unlines ("unbound: ":(map (intersperse ' ') (chunk 10 unused)))
+          spawn (osdText output 6)
+      )
+                    
+                              
       -- Information on osd
     , (super xK_d, spawn osdDate)
     , (super xK_t, spawn osdTime)
