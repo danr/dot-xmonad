@@ -82,16 +82,7 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
   let super      = (,) modMask
       shiftSuper = (,) (modMask .|. shiftMask)
       
-  in M.fromList $
-
-      -- Spawn programs
-    [ (super xK_r, osdspawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
-    , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
-    , (super xK_c, osdspawn "conkeror")
-    , (super xK_e, osdspawn "emacs")
-      
-      -- List the unbound keys
-    , (shiftSuper xK_b, do 
+      osdUnbound = do
           let bs = map fst (M.toList (myKeys conf))
               alphabet = ['a'..'z'] ++ ['A'..'Z'] -- ++ "',.[];"
               keys :: [Char]
@@ -101,8 +92,17 @@ myKeys conf@(XConfig {XMonad.modMask = modMask}) =
               unused = sort (alphabet \\ keys)
               output = unlines ("unbound: ":(map (intersperse ' ') (chunk 10 unused)))
           spawn (osdText output 6)
-      )
-                    
+      
+  in M.fromList $
+
+      -- Spawn programs
+    [ (super xK_r, osdspawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+    , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
+    , (super xK_c, osdspawn "conkeror")
+    , (super xK_e, osdspawn "emacs")
+      
+      -- List the unbound keys
+    , (shiftSuper xK_b, osdUnbound)                    
                               
       -- Information on osd
     , (super xK_d, spawn osdDate)
