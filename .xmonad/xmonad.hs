@@ -63,7 +63,7 @@ dmenu = "dmenu_run -fn \"-*-terminus-*-*-*-*-*-*-*-*-*-*-*-*\""
 osdColor = "#6060e0"
 osdFont = "-*-droid sans mono-*-*-*-*-80-*-*-*-*-*-*-*"
 
-osd time = "osd_cat -d " ++ show time ++ " -p middle -A center -c '" ++ osdColor ++ "'" 
+osd time = "osd_cat -l 7 -d " ++ show time ++ " -p middle -A center -c '" ++ osdColor ++ "'" 
       ++ " -f '" ++ osdFont ++ "'" ++ " -O 2"
       
 osdPipe time = "|" ++ osd time
@@ -82,132 +82,136 @@ osdAcpi = killosd ++ "acpi | perl -e \"@_ = split(', ',<>); print qq/@_[2]@_[1]/
 
 osdspawn s = spawn s >> spawn (osdText (takeWhile (/= ' ') s) 1) 
 
-myKeys conf@(XConfig {XMonad.modMask = modMask}) =
-
-  let just       = (,) 0
-      shift      = (,) shiftMask
-      super      = (,) modMask
-      shiftSuper = (,) (modMask .|. shiftMask)
+myKeys conf@(XConfig {XMonad.modMask = modMask}) = M.fromList keylist
+  where
+    just       = (,) 0
+    shift      = (,) shiftMask
+    super      = (,) modMask
+    shiftSuper = (,) (modMask .|. shiftMask)
+    
+    osdUnbound = do
+        let bs = map fst keylist
+            alphabet = ['a'..'z'] ++ ['A'..'Z'] -- ++ "',.[];"
+            interpretKey (m,chr . fromEnum -> k)
+              | fromEnum m == fromEnum modMask                  = Just k
+              | fromEnum m == fromEnum (modMask .|. shiftMask)  = Just (toUpper k)
+              | otherwise                                       = Nothing
+            keys :: [Char]
+            keys = mapMaybe interpretKey bs
+            unused = sort (alphabet \\ keys)
+            dups   = sort (alphabet `intersect` (keys \\ nub keys))
+            spacy  = intersperse ' '
+            output = unlines $ "unbound: ":map spacy (chunk 10 unused)
+                                ++ if null dups then [] 
+                                       else ["duplicates : " ++ spacy dups]
+        spawn (osdText output 6)
+        
+    keylist =
+       
+        -- Spawn programs
+      [ (super xK_r, osdspawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
+      , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
+      , (super xK_c, osdspawn "conkeror")
+      , (super xK_o, osdspawn "emacs")
+        
+        -- List the unbound keys
+      , (super xK_u, osdUnbound)                    
+                                
+        -- Information on osd
+      , (super xK_d, spawn osdDate)
+      , (super xK_t, spawn osdTime)
+      , (shiftSuper xK_b, spawn osdAcpi)
+        
+        -- Take screenshot
+      , (super xK_Print, osdspawn "scrot screen_%Y-%m-%d.png")
       
-      osdUnbound = do
-          let bs = map fst (M.toList (myKeys conf))
-              alphabet = ['a'..'z'] ++ ['A'..'Z'] -- ++ "',.[];"
-              interpretKey (m,chr . fromEnum -> k)
-                | fromEnum m == fromEnum modMask                  = Just k
-                | fromEnum m == fromEnum (modMask .|. shiftMask)  = Just (toUpper k)
-                | otherwise                                       = Nothing
-              keys :: [Char]
-              keys = mapMaybe interpretKey bs
-              unused = sort (alphabet \\ keys)
-              output = unlines ("unbound: ":map (intersperse ' ') (chunk 10 unused))
-          liftIO $ writeFile "/home/dan/unbound" keys
-          spawn (osdText output 6)
+        -- Dmenu
+      , (super xK_g, spawn dmenu)
       
-  in M.fromList $
-
-      -- Spawn programs
-    [ (super xK_r, osdspawn "urxvt -fn \"xft:Terminus-8\" -rv +sb")
-    , (super xK_h, osdspawn "urxvt -fn \"xft:Terminus-8\" +sb")
-    , (super xK_c, osdspawn "conkeror")
-    , (super xK_e, osdspawn "emacs")
+        -- Kill window
+      , (shiftSuper xK_d, kill)
       
-      -- List the unbound keys
-    , (shiftSuper xK_b, osdUnbound)                    
-                              
-      -- Information on osd
-    , (super xK_d, spawn osdDate)
-    , (super xK_t, spawn osdTime)
-    , (super xK_a, spawn osdAcpi)
+        -- Rotate through the available layout algorithms
+      , (super xK_space, sendMessage NextLayout)
       
-      -- Take screenshot
-    , (super xK_Print, osdspawn "scrot screen_%Y-%m-%d.png")
-    
-      -- Dmenu
-    , (super xK_g, spawn dmenu)
-    
-      -- Kill window
-    , (shiftSuper xK_d, kill)
-    
-      -- Rotate through the available layout algorithms
-    , (super xK_space, sendMessage NextLayout)
-    
-      --  Reset the layouts on the current workspace to default
-    , (shiftSuper xK_space, setLayout $ XMonad.layoutHook conf)
-    
-      -- Shrink and expand the windows on the non-master area
-    , (super xK_v, sequence_ (take 6 $ cycle [sendMessage MirrorShrink,sendMessage ShrinkSlave]))
-    , (super xK_w, sequence_ (take 6 $ cycle [sendMessage MirrorExpand,sendMessage ExpandSlave]))
-
-      -- Move focus 
-    , (super xK_Tab , windows W.focusDown)
-    , (super xK_n   , windows W.focusDown)
-    , (super xK_p   , windows W.focusUp  )
-
-      -- Swap the focused window and the master window, and focus master (dwmpromote)
-    , (super xK_Return, dwmpromote )
-
-      -- Swap the windows
-    , (shiftSuper xK_n, windows W.swapDown  )
-    , (shiftSuper xK_p, windows W.swapUp    )
-
-      -- Resize the master area
-    , (super xK_b, sendMessage Shrink)
-    , (super xK_f, sendMessage Expand)
-    
-	-- Toggle zoom (full) and mirror
-    , (super xK_z, sendMessage $ Toggle FULL )
-    , (super xK_m, sendMessage $ Toggle MIRROR )
-
-      -- Push window back into tiling
-    , (shiftSuper xK_t, withFocused $ windows . W.sink)
-
-      -- [De]Increment the number of windows in the master area
-    , (super xK_comma , sendMessage (IncMasterN 1))
-    , (super xK_period, sendMessage (IncMasterN (-1)))
-
-      -- Quit xmonad
-    , (shiftSuper xK_q, io (exitWith ExitSuccess))
-
-      -- Restart xmonad
-    , (super xK_q,       restart "xmonad" True)		
+        --  Reset the layouts on the current workspace to default
+      , (shiftSuper xK_space, setLayout $ XMonad.layoutHook conf)
       
-      -- CycleWS
-    , (super xK_o,      moveTo Prev NonEmptyWS)
-    , (super xK_u,      moveTo Next NonEmptyWS)
-    , (shiftSuper xK_o, shiftToPrev >> prevWS)
-    , (shiftSuper xK_u, shiftToNext >> nextWS)
-    , (super xK_s,      toggleWS)
-    , (super xK_i,      moveTo Next EmptyWS)
+        -- Shrink and expand the windows on the non-master area
+      , (super xK_v, sequence_ (take 6 $ cycle [sendMessage MirrorShrink,sendMessage ShrinkSlave]))
+      , (super xK_w, sequence_ (take 6 $ cycle [sendMessage MirrorExpand,sendMessage ExpandSlave]))
+     
+        -- Move focus 
+      , (super xK_Tab, windows W.focusDown)
+      , (super xK_n,   windows W.focusDown)
+      , (super xK_p,   windows W.focusUp)
+     
+        -- Swap the focused window and the master window, and focus master (dwmpromote)
+      , (super xK_Return, dwmpromote)
+     
+        -- Swap the windows
+      , (shiftSuper xK_n, windows W.swapDown)
+      , (shiftSuper xK_p, windows W.swapUp)
+     
+        -- Resize the master area
+      , (super xK_b, sendMessage Shrink)
+      , (super xK_f, sendMessage Expand)
       
-    ] 
-    
-    ++
-    
-    let mute = spawn (killosd ++ "amixer sset Master toggle | grep -w 'on\\|off' -o | head -n 1 | perl -e \"print 'Master: '; print <>;\" " ++ osdPipe 1)
-        volume s = spawn (killosd ++ "amixer set Master " ++ s ++ " | grep '[0-9]*%' -o | head -n 1 " ++ osdPipe 1) in     
-    
-    [ -- Media keys : alsamixer
-      (just xF86XK_AudioMute,         mute)
-    , (just xF86XK_AudioRaiseVolume,  volume "10%+")
-    , (just xF86XK_AudioLowerVolume,  volume "10%-")
-    , (shift xF86XK_AudioRaiseVolume, volume "2%+")
-    , (shift xF86XK_AudioLowerVolume, volume "2%-")
+          -- Toggle zoom (full) and mirror
+      , (super xK_z, sendMessage $ Toggle FULL)
+      , (super xK_m, sendMessage $ Toggle MIRROR)
+     
+        -- Push window back into tiling
+      , (shiftSuper xK_t, withFocused $ windows . W.sink)
+     
+        -- [De]Increment the number of windows in the master area
+      , (super xK_comma,  sendMessage (IncMasterN 1))
+      , (super xK_period, sendMessage (IncMasterN (-1)))
+     
+        -- Quit xmonad
+      , (shiftSuper xK_q, io (exitWith ExitSuccess))
+     
+        -- Restart xmonad
+      , (super xK_q,       restart "xmonad" True)		
+        
+        -- CycleWS
+      , (super xK_a,      moveTo Prev NonEmptyWS)
+      , (super xK_e,      moveTo Next NonEmptyWS)
+      , (shiftSuper xK_a, shiftTo Prev NonEmptyWS >> moveTo Prev NonEmptyWS)
+      , (shiftSuper xK_e, shiftTo Next NonEmptyWS >> moveTo Next NonEmptyWS)
+      , (super xK_s,      toggleWS)
+      , (super xK_i,      moveTo Next EmptyWS)
+      , (shiftSuper xK_i, shiftTo Next EmptyWS)
+        
+      ] 
       
-      -- Media keys : mpd
-    , (just xF86XK_AudioPlay,        spawn "mpc toggle")
-    , (just xF86XK_AudioStop,        spawn "mpc stop")
-    , (just xF86XK_AudioPrev,        spawn "mpc prev")
-    , (just xF86XK_AudioNext,        spawn "mpc next")
+      ++
       
-    ]
-    
-    ++
-    
-    -- mod-[1..9], Switch to workspace N
-    -- mod-shift-[1..9], Move client to workspace N
-    [ ((m .|. modMask, k), windows $ f i)
-    | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-    , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
+      let mute = spawn (killosd ++ "amixer sset Master toggle | grep -w 'on\\|off' -o | head -n 1 | perl -e \"print 'Master: '; print <>;\" " ++ osdPipe 1)
+          volume s = spawn (killosd ++ "amixer set Master " ++ s ++ " | grep '[0-9]*%' -o | head -n 1 " ++ osdPipe 1) in     
+      
+      [ -- Media keys : alsamixer
+        (just xF86XK_AudioMute,         mute)
+      , (just xF86XK_AudioRaiseVolume,  volume "10%+")
+      , (just xF86XK_AudioLowerVolume,  volume "10%-")
+      , (shift xF86XK_AudioRaiseVolume, volume "2%+")
+      , (shift xF86XK_AudioLowerVolume, volume "2%-")
+        
+        -- Media keys : mpd
+      , (just xF86XK_AudioPlay,        spawn "mpc toggle")
+      , (just xF86XK_AudioStop,        spawn "mpc stop")
+      , (just xF86XK_AudioPrev,        spawn "mpc prev")
+      , (just xF86XK_AudioNext,        spawn "mpc next")
+        
+      ]
+      
+      ++
+     
+     -- mod-[1..9], Switch to workspace N
+     -- mod-shift-[1..9], Move client to workspace N
+     [ ((m .|. modMask, k), windows $ f i)
+     | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
+     , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
 
 {-    ++
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
